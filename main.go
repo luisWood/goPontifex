@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 	"strings"
 )
@@ -34,13 +33,13 @@ func findJokerIndex(deck []int, jokerValue int) int {
 func validateJokerPosition(index int, step int, deckSize int) int {
 	if step == 1 {
 		if index == deckSize-1 {
-			return step
+			return 1
 		}
 	} else if step == 2 {
 		if index == deckSize-2 {
-			return step
+			return 1
 		} else if index == deckSize-1 {
-			return step - 1
+			return 2
 		}
 	}
 	return index + step
@@ -53,15 +52,28 @@ func moveJoker(jokerValue int, step int, deck []int) []int {
 	// 2. Validate that the final position is not the last or first position in deck
 	newJokerIndex := validateJokerPosition(jokerIndex, step, len(deck))
 
-	// 3. Move joker {STEP} steps FAILING, NEED TO FIX TODO
+	// 3. Move joker {STEP} steps
 
 	if jokerIndex < newJokerIndex {
-		copy(deck[jokerIndex:newJokerIndex], deck[jokerIndex+1:newJokerIndex+1])
+		partA := deck[:jokerIndex]
+		partB := deck[jokerIndex+1 : newJokerIndex+1]
+		copy(deck[:], append(partA, partB...))
+		deck[newJokerIndex] = jokerValue
+
 	} else if jokerIndex > newJokerIndex {
-		copy(deck[newJokerIndex+1:jokerIndex+1], deck[newJokerIndex:jokerIndex])
+		// deck := []int{1, 2, 3, 4, 5, 6, 7, 8, 10, 9}
+		//  0  1  2  3  4  5  6  7  8  9
+		//   1, 10, 2, 3, 4, 5, 6, 7, 8, 9
+		//jokerIndex = 7
+		//
+		partA := deck[:newJokerIndex]
+		partB := deck[newJokerIndex-1 : jokerIndex]
+		copy(deck[:], append(partA, partB...))
+		deck[newJokerIndex] = jokerValue
+
 	}
 
-	deck[newJokerIndex] = jokerValue
+	// deck[newJokerIndex] = jokerValue
 	return deck
 }
 
@@ -97,7 +109,7 @@ func countCut(deck []int, deckSize int) []int {
 }
 
 func getKeystream(deck []int) int {
-	keystream := deck[deck[0]-1]
+	keystream := deck[deck[0]]
 	return keystream
 }
 
@@ -128,30 +140,5 @@ func alphabeticToNumeric(message string) []int {
 	return results
 }
 
-func encrypt(numericMessage []int) []int {
-	DECK_SIZE := 10
-	JOKER_A_VALUE := DECK_SIZE - 1
-	JOKER_B_VALUE := DECK_SIZE
-	initialDeck := setupDeck(DECK_SIZE)
-	deck := initialDeck
-
-	encryptedNumericMessage := []int{}
-	for value := range numericMessage {
-		deck = moveJoker(JOKER_A_VALUE, 1, deck)
-		deck = moveJoker(JOKER_B_VALUE, 2, deck)
-		deck = tripleCut(deck, JOKER_A_VALUE, JOKER_B_VALUE)
-		deck = countCut(deck, DECK_SIZE)
-
-		keystream := getKeystream(deck)
-		encryptedNumericMessage = append(encryptedNumericMessage, value+keystream)
-	}
-
-	return encryptedNumericMessage
-}
-
 func main() {
-	example := "Hello World"
-	numericMessage := alphabeticToNumeric(example)
-	encryptedNumericMessage := encrypt(numericMessage)
-	fmt.Println(encryptedNumericMessage)
 }
